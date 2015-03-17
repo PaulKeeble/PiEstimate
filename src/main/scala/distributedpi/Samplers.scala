@@ -12,8 +12,7 @@ import akka.actor.ActorSelection.toScala
 import distributedpi.PiMonteCarlo._
 
 object Samplers {
-   val system = ActorSystem("DistributedPi")
-   val piEstimator = system.actorOf(Props[SamplerSupervisor], "pi")
+
    
   case class GetEstimate(samples:Int)
   case class Sample(inCount:Int,totalCount:Int)

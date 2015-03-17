@@ -12,12 +12,10 @@ import akka.actor.ActorSelection.toScala
 import akka.routing.FromConfig
 
 object ActorPi {
-
-  val system = Samplers.system
   
   val timeOut = 30.seconds
   
-  def pi(samples:Int) = {
+  def pi(samples:Int)(implicit system: ActorSystem) = {
     val inbox = getEstimate(samples)
     
     val Estimate(pi) =  inbox.receive(timeOut)
@@ -25,7 +23,7 @@ object ActorPi {
     pi
   }
      
-  def piParrallel(samples1:Int,samples2:Int) = {
+  def piParrallel(samples1:Int,samples2:Int)(implicit system: ActorSystem) = {
      val inbox1 = getEstimate(samples1)
      
      val inbox2 = getEstimate(samples2)
@@ -36,7 +34,7 @@ object ActorPi {
      (piA,piB)
    }
    
-   private[this] def getEstimate(samples:Int) = {
+   private[this] def getEstimate(samples:Int)(implicit system: ActorSystem) = {
      val inbox = Inbox.create(system)
      val estimator = system.actorOf(Props[SingleEstimater])
     
@@ -56,16 +54,15 @@ object ActorPi {
       
       v :+ GetEstimate(remainder)
     }
-   
-   def shutdown {
-     system.shutdown()
-   }
 
   /**
    * Created with every request for a Pi Estimate, communicates to the pi actor locally with the sample size request and 
    * starts a local accumulator for the purpose of estimating Pi 
    */
-  private class SingleEstimater extends Actor with ActorLogging {
+  class SingleEstimater(samplersAddress:String) extends Actor with ActorLogging {
+    
+    def this() = this("/user/pi/samplers")
+    
     val r = new Random
     
     var customer : Option[ActorRef] = None
@@ -77,7 +74,7 @@ object ActorPi {
         val accumulator = context.actorOf(Props(classOf[SampleCollector],samples),"accumulator")
         
         makeMultipleMessages(samples).foreach { m =>
-          context.actorSelection("/user/pi/samplers").tell(m,accumulator)
+          context.actorSelection(samplersAddress).tell(m,accumulator)
         }
         
       }
@@ -88,7 +85,7 @@ object ActorPi {
   }
   
 
-  private case class Estimate(pi:Double)
+  case class Estimate(pi:Double)
   
   private  class SampleCollector(expectedSamples: Int) extends Actor with ActorLogging {
     var accumulation = initialSample

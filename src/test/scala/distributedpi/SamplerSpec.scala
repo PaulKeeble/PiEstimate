@@ -10,7 +10,7 @@ import akka.actor.Props
 
 
 class SamplerSpec extends FunSpec {
-  implicit val system = ActorPi.system
+  implicit val system = ConstructActorSystem.system
 	
   val randomSeed = 0L
   val testId = 1

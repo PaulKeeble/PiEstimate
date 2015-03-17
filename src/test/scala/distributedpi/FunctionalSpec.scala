@@ -13,8 +13,7 @@ import ActorPi._
 import Samplers._
 
 class FunctionalSpec(_system: ActorSystem) extends TestKit(_system) with FunSpecLike with ImplicitSender with BeforeAndAfterAll {
-  
-  def this() = this(ActorPi.system)
+  def this() = this(ConstructActorSystem.system)
   
   override def afterAll {
     TestKit.shutdownActorSystem(system)
